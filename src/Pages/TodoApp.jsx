@@ -1,17 +1,28 @@
 
-import React, { useRef, useState } from 'react'
+import { collection, getDocs } from "firebase/firestore";
+import React, { useEffect, useRef, useState } from 'react'
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Navbar from '../Components/Navbar';
-import { auth } from '../Config/firebaseConfig';
+import { auth, db } from '../Config/firebaseConfig';
 import { useNavigate } from 'react-router-dom';
+import {  addDoc } from "firebase/firestore"; 
+
+
+
+
+
 function TodoApp() {
 
 let [todo,setTodo] = useState([])
+let [getTodo,setGetTodo] = useState([])
 let navigate = useNavigate();
 let todoValue = useRef()
 
-function AddTodo(){
+async function AddTodo(){
    
+
+
+
     onAuthStateChanged(auth, (user) => {
         if (user) {
        
@@ -21,19 +32,45 @@ function AddTodo(){
        navigate('')
 
         }
-      });
+      })
       
 
 
+
+      const docRef = await addDoc(collection(db, "todos"), {
+    todo:todoValue.current.value
+      });
+    //   console.log("Document written with ID: ", docRef.id);
+
     todo.push(todoValue.current.value)
-    setTodo(todo)
-console.log(todo);
+    setTodo([...todo])
+// console.log(todo);
 
 
+
+useEffect(()=>{
+
+
+    async function getData(){
+        
+        
+        const querySnapshot = await getDocs(collection(db, "todos"));
+        querySnapshot.forEach((doc) => {
+
+      // doc.data() is never undefined for query doc snapshots
+      console.log(doc.id, " => ", doc.data());
+      todo.push(doc.data())
+      setTodo([...todo])
+      
+    });
+    
+    
+}
+getData()
+},[])
 todoValue.current.value =''
 
 }
-
   return (
 
 <>
@@ -65,24 +102,22 @@ todoValue.current.value =''
 <button className="btn btn-xs sm:btn-sm  mt-4 md:btn-md  bg-success ml-3" onClick={()=>{AddTodo()}}>Add Todo</button>
 
 </div>
-<div>
-    return <div>
 
-{todo ? todo.map((item)=>{
+
+
+{todo ? todo.map((item,index)=>{
+    return <ul key={index}>
+    <li >
+
+{item}
     
-<ul>
-
-    <p>{item}</p>
-
+    </li>
 </ul>
-}): <p>Items Not Found</p> }
-
-</div>
-
-
+    
+}):console.log('not available')
+}
 
 
-</div>
 
 
 </>
